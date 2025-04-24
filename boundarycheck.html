@@ -1,0 +1,162 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Results for {{address}}</title>
+
+    <!--Import Leaflet Stylesheet-->
+    <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css"
+     integrity="sha256-p4NxAoJBhIIN+hmNHrzRCf9tD/miZyoHS5obTRR9BMY="
+     crossorigin=""/>
+
+     <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"
+     integrity="sha256-20nQCchB9co0qIjJZRGuk2/Z9VM+kNiyxNV1lvTlZBo="
+     crossorigin=""></script>
+
+     <style>
+        /*Set up layout for landscape version tablet and laptop*/
+        @media screen and (orientation:landscape) {
+            #maincontainer {flex-direction: row;}
+            #infowindow {width: 25vw;}}
+        
+        /*Set up layout for portrait version phone, tablet and laptop*/
+        @media screen and (orientation:portrait) {
+            #maincontainer {flex-direction: column;}
+            #infowindow {width: 95vw;}}
+        
+        /*Set up layout for landscape version for phone only*/
+        @media screen and (orientation:landscape) and (max-width:800px) {
+            h2 {font-size: 4vh;}
+            h3 {font-size: 3vh;}
+            td {font-size: 3vh;}
+            a {font-size: 3vh;}}
+
+</style>
+
+</head>
+
+<body style="background-color: antiquewhite;">
+    <flex-container id="maincontainer" style="display: flex; height: 100vh;">
+        <div id="infowindow" style="padding-right: 2vh; background-color: antiquewhite;">
+    <h2>Results for: {{address}}</h2>
+
+    {% if oldbound != newbound %}
+    <h3>There is a proposed change for the general electorate zoning of your property</h3>
+    <h3>Your current general electorate is: {{oldbound}}, and your new proposed general electorate is {{newbound}}</h3>
+    
+    {% else %}
+
+        {% if changetrue %}
+        <h3>There is a proposed change in general electorate boundaries for this address </h3>
+        <h3>While your general electorate remains as {{oldbound}}, there are proposed changes to the boundaries of the electorate</h3>
+        <h3>See the map to view the current and proposed boundaries, for small boundary changes you may need to zoom in closely</h3>
+        {% else %}
+        <h3>There is no proposed changes in your general electorate: {{oldbound}}</h3>
+        {% endif %}
+    {% endif %}
+
+    <table>
+        <tr>
+            <td>Current Boundary <br> {{oldbound}}</td>
+            <td style="padding-left: 5%;">Proposed New Boundary <br> {{newbound}}</td>
+        </tr>
+        <tr>
+            <td style="font-size: 15px; color: #1AFF1A;"><b>_______</b></td>
+            <td style="font-size: xx-large; color: #4B0092;">-------</td>
+        </tr>
+    </table>
+
+    <br>
+    <a href="{% url 'EB:home' %}">Try another address</a>
+
+    <br>
+    <a href="https://vote.nz/boundary-review/boundaries/the-changes/proposed/">See more information about the proposed changes</a>
+
+    </div>
+    
+    <div style="flex-grow: 1;" id="map"></div>
+
+    </flex-container> 
+
+    <script>
+        //Create leaflet map with OSM Tiles
+        var map = L.map('map').setView([{{lat}}, {{long}}], 11);
+        let features = []
+        L.tileLayer('https://tile.openstreetmap.org/{z}/{x}/{y}.png', {
+        maxZoom: 19,
+        attribution: '&copy; <a href="http://www.openstreetmap.org/copyright">OpenStreetMap</a>'
+        }).addTo(map);
+        
+        //Add marker for user address
+        var marker = L.marker([{{lat}}, {{long}}]).addTo(map);
+        marker.bindTooltip("{{address}}")
+
+        //Add Polygon for Current Electoral Boundary
+        var oldlayer = L.polygon({{oldb}}).addTo(map);
+        oldlayer.setStyle({
+            fillColor: ' #7982f9 ',
+            fillOpacity: 0.25,
+            color:  '#1AFF1A',
+            weight: "3",
+        })
+        //Add Tooltip for Current Electoral Boundary and Bind to Polygon
+        oldlayer.bindTooltip("Current Electoral Zone - {{oldbound}} ")
+        features.push(oldlayer)
+    </script>
+
+    {% if oldbound != newbound or changetrue %}
+
+    <script>
+    // Add Polygon for New Electoral Boundary
+    var newlayer = L.polygon({{newb}}).addTo(map);
+    newlayer.setStyle({
+        fillColor: '#7982f9',
+        fillOpacity: 0.25,
+        color:  '#4B0092',
+        weight: "3",
+        dashArray: "20,20",
+        dashOffset: "20"
+
+         })
+     //Add Tooltip for Current Electoral Boundary and Bind to Polygon
+    newlayer.bindTooltip("Proposed Electoral Zone {{newbound}} ")
+    features.push(newlayer)
+    console.log(features)
+    </script>
+
+    {% endif %}
+
+    {% if SecondAucklandOld != "Not Applicable" %}
+
+    <script>
+    //Add Secondary Polygon for Multipolygon Features - Current Boundaries
+    var AuckSecondOld = L.polygon({{AucklandSecondOld}}).addTo(map);
+    AuckSecondOld.setStyle({
+            fillColor: ' #7982f9 ',
+            fillOpacity: 0.25,
+            color:  '#1AFF1A',
+            weight: "3"
+    })
+    features.push(AuckSecondOld)
+    //Add Secondary Polygon for Multipolygon Features - New Boundaries
+    var AuckSecondNew = L.polygon({{AucklandSecondNew}}).addTo(map);
+    AuckSecondNew.setStyle({
+        fillColor: '#7982f9',
+        fillOpacity: 0.25,
+        color:  '#4B0092',
+        weight: "3",
+        dashArray: "20,20",
+        dashOffset: "20"
+    })
+    features.push(AuckSecondNew)
+    </script>
+
+    {% endif %}
+    <script>
+        //Set map fit to bounds of displayed polygons
+        boundingbox = new L.featureGroup(features)
+        map.fitBounds(boundingbox.getBounds());
+    </script>
+</body>
+</html>

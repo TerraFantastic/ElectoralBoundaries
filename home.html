@@ -1,0 +1,86 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Proposed Electoral Boundary Checker</title>
+    
+    <script 
+    src="https://maps.googleapis.com/maps/api/js?key=APIKEYPLACEHOLDER&libraries=places&callback=initMap">
+    </script>
+
+    <style>
+    .formC {
+        display: flex;
+        justify-content: center;
+        align-items: center;
+        width: 80vw;
+    }
+    .input {
+            font-size: 2vw;
+            color: blueviolet;
+            text-align: center;
+        }
+    </style>
+
+    
+    <style>
+    body {
+      background-image: url('https://upload.wikimedia.org/wikipedia/commons/thumb/6/6b/2014-365-283_Tightly_Linked_%2815499790602%29.jpg/800px-2014-365-283_Tightly_Linked_%2815499790602%29.jpg');
+      background-repeat: no-repeat;
+      background-size: cover;
+        }
+    </style> 
+
+
+</head>
+
+
+<body>
+
+<div style="background-color: antiquewhite; width: 80vw; height: auto; margin-left:10vw; border-radius: 1%;">
+    <h1 style="text-align: center; padding-top: 2vh;">2025 Proposed General Electoral Boundary Change Checker</h1>
+    <h2 style="text-align: center;">Statistic's New Zealand has proposed changes to the General Electoral Zoning for 2025.</h2> 
+    <h3 style ="text-align: center; padding-left: 2vh; padding-right: 2vh;">To check if there are proposed changes to the electoral zoning for your property, 
+        start entering your address into the search bar below. Select your address from the verified list when it appears.</h3>
+ 
+    <div class="formC">
+    <form action="{% url 'EB:Boundary'%}", id="addressform">
+        <button type="submit" disabled style="display: none" aria-hidden="true"></button>
+        {{form}}
+    </form>
+    </div>
+
+    <h5 style ="text-align: center; padding-left: 2vh; padding-right: 2vh;">This GIS App is not affliated with Stats NZ. Data Sources: Basemap - OpenStreetMap, Electoral Boundaries - Stats NZ</h5>
+    <h5 style ="text-align: center; padding-left: 2vh; padding-right: 2vh; padding-bottom: 2vh;">Geocoding - Google Places, Image Accreditation: cogdogblog, CC BY 2.0 <https://creativecommons.org/licenses/by/2.0>, via Wikimedia Commons</h5>
+
+</div>
+
+    <script>
+    // Set id_address form as input component for Autocomplete and set restriction options
+    const input = document.getElementById("id_address");
+    const options = {
+    componentRestrictions: { country: "nz" },
+    fields: ["address_components", "geometry"],
+    strictBounds: false};
+
+    // Once page is loaded, attach automcomplete to input form
+    document.addEventListener('DOMContentLoaded', function() {
+    service = new google.maps.places.Autocomplete(input, options);
+
+    //Wait until user enters content into field
+    service.addListener("place_changed", grabGeometry);})
+
+    //Once user selects autocompleted option, pass address and coords to form and submit
+    function grabGeometry() {
+        console.log("Grabbing Geometry")
+        const lat = service.getPlace().geometry.location.lat()
+        const long = service.getPlace().geometry.location.lng()
+        document.getElementById("id_lat").value = lat;
+        document.getElementById("id_long").value = long;
+        document.getElementById("addressform").submit();
+    }
+
+</script>
+</body>
+</html>
